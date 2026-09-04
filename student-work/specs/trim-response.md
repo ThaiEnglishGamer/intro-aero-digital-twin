@@ -99,11 +99,11 @@ Also make the calculated values available through the provided `stability.pitch.
 
 Before asking ChatGPT for code, complete each prediction in your own words.
 
-1. If `Cm_alpha < 0` and the angle-of-attack disturbance is positive, `delta_Cm` should be `[COMPLETE]` because `[COMPLETE]`.
-2. If `Cm_alpha > 0` and the angle-of-attack disturbance is positive, the response should be `[COMPLETE]` because `[COMPLETE]`.
-3. If `Cm_alpha = 0`, changing angle of attack should `[COMPLETE]`.
-4. If `Cm0` is fixed and the magnitude of a nonzero `Cm_alpha` increases, the trim angle magnitude should `[COMPLETE]`.
-5. Doubling `disturbanceAlphaDeg` while holding `Cm_alpha` fixed should `[COMPLETE]`.
+1. If `Cm_alpha < 0` and the angle-of-attack disturbance is positive, `delta_Cm` should be `Negative` because `a positive (nose-up) disturbance multiplied by a negative pitching moment slope yields a negative (nose-down) moment change, creating a restoring tendency`.
+2. If `Cm_alpha > 0` and the angle-of-attack disturbance is positive, the response should be `positive` because `a positive disturbance multiplied by a positive slope yields a positive (nose-up) moment change, which exacerbates the disturbance and increases the angle of attack further`.
+3. If `Cm_alpha = 0`, changing angle of attack should `produce zero change in pitching moment, representing a neutral stability tendency`.
+4. If `Cm0` is fixed and the magnitude of a nonzero `Cm_alpha` increases, the trim angle magnitude should `decrease (approach zero), because a steeper slope requires less angle of attack to offset the same initial pitching moment`.
+5. Doubling `disturbanceAlphaDeg` while holding `Cm_alpha` fixed should `double the magnitude of the resulting disturbance moment-coefficient change (delta_Cm), reflecting the direct linear relationship`.
 
 ## 8. Reference Calculation — STUDENT COMPLETES
 
@@ -111,28 +111,29 @@ Use the assigned class values or values approved by your instructor. Show the su
 
 ```text
 Inputs:
-Cm0 = [COMPLETE]
-Cm_alpha = [COMPLETE] 1/rad
-alpha = [COMPLETE] deg
-delta_alpha = [COMPLETE] deg
+Cm0 = 0.04
+Cm_alpha = -0.8* 1/rad
+alpha = 2.86 deg
+delta_alpha = +2.00 deg
 
 Angle conversion:
-alpha_rad = [SHOW WORK]
-delta_alpha_rad = [SHOW WORK]
+alpha_rad = 2.86 * (pi / 180) = 0.0499164 rad
+delta_alpha_rad = 2.00 * (pi / 180) = 0.0349066 rad
 
 Current pitching-moment coefficient:
-Cm(alpha) = [SHOW WORK]
+Cm(alpha) = 0.04 + (-0.8 * 0.0499164) = 0.04 - 0.0399331 = 0.0000669
+
 
 Trim angle:
-alpha_trim_rad = [SHOW WORK]
-alpha_trim_deg = [SHOW WORK]
+alpha_trim_rad = -0.04 / -0.8 = 0.05 rad
+alpha_trim_deg = 0.05 * (180 / pi) = 2.8647890 deg
 
 Disturbance response:
-delta_Cm = [SHOW WORK]
+delta_Cm = -0.8 * 0.0349066 = -0.0279253
 
 Expected classifications:
-selected condition = [trimmed / not trimmed]
-disturbance tendency = [restoring / neutral / destabilizing]
+selected condition = not trimmed (abs(0.0000669) > 1e-6)
+disturbance tendency = restoring (delta_alpha_rad * delta_Cm is negative)
 ```
 
 ## 9. Verification Cases — STUDENT COMPLETES
@@ -143,16 +144,20 @@ Define all three cases before implementation. Include exact inputs, expected out
 
 Use your Section 8 reference calculation.
 
-```text
-[COMPLETE]
+```
+Inputs: cm0 = 0.04, cmAlphaPerRad = -0.8, angleOfAttackDeg = 2.86, disturbanceAlphaDeg = 2.00.
+
+Expected Outputs: Cm(alpha) ≈ 0.000067 (not trimmed since abs(0.000067) > 1e-6), Trim angle ≈ 2.864789 deg, delta_Cm ≈ -0.027925, Tendency = "restoring". Tolerance for numeric comparisons is 1e-5.
 ```
 
 ### 9.2 Behavioral case
 
 Change one input and state the exact trend or sign that must result.
 
-```text
-[COMPLETE]
+```
+Change: Change cmAlphaPerRad from -0.8 to +0.8 while holding disturbanceAlphaDeg at +2.00 deg.
+
+Expected Trend: delta_Cm must become a positive value, and the disturbance tendency classification must change from "restoring" to "destabilizing".
 ```
 
 ### 9.3 Boundary or sanity case
@@ -160,7 +165,9 @@ Change one input and state the exact trend or sign that must result.
 Use an informative boundary such as zero slope, zero disturbance, or the trim condition. State the exact behavior expected and why division by zero or a false physical claim must not occur.
 
 ```text
-[COMPLETE]
+Change: Change cmAlphaPerRad from -0.8 to +0.8 while holding disturbanceAlphaDeg at +2.00 deg.
+
+Expected Trend: delta_Cm must become a positive value, and the disturbance tendency classification must change from "restoring" to "destabilizing".
 ```
 
 ## 10. Feature Requirements
@@ -196,7 +203,7 @@ Do not modify any existing file.
 In one or two sentences, state what decision the completed feature will support and what it cannot establish.
 
 ```text
-[COMPLETE]
+This feature allows an engineer to decide if the aircraft design possesses basic static longitudinal stability (a natural tendency to return to its original pitch) and if it can achieve steady, trimmed flight. However, it cannot establish dynamic stability (how it wobbles over time), acceptable pilot handling qualities, or if the aircraft is safe in extreme conditions like a stall.
 ```
 
 ---
