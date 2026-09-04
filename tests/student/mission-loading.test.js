@@ -7,7 +7,9 @@ import { initialAircraft } from "../../src/core/data/aircraft.js";
 import { featureEntries } from "../../src/core/features/index.js";
 import { resolveFeatureAnalysis } from "../../src/core/features/featureContract.js";
 import { capabilityContext, runSimulation } from "../../src/core/simulation/runtime.js";
+
 const a = { massKg: 1.35, airframeCgM: .11, payloadKg: .25, initialPayloadPositionM: .1, missionPayloadPositionM: .24, neutralPointM: .16, meanChordM: .32, forwardCgLimitM: .09, aftCgLimitM: .16, minimumStaticMargin: .05 };
+
 describe("mission loading", () => {
   it("moves CG aft and reduces margin when payload moves aft", () => { const r = evaluateMissionLoading(a); expect(r.cgShiftM).toBeGreaterThan(0); expect(r.missionStaticMargin).toBeLessThan(r.initialStaticMargin); });
   it("has zero shift when stations coincide and rejects reversed limits", () => { expect(evaluateMissionLoading({ ...a, missionPayloadPositionM: a.initialPayloadPositionM }).cgShiftM).toBe(0); expect(() => evaluateMissionLoading({ ...a, forwardCgLimitM: .2, aftCgLimitM: .1 })).toThrow(); });
@@ -23,6 +25,7 @@ describe("mission loading", () => {
 });
 
 const downstreamIds = ["static-margin", "tail-elevator-contribution", "stick-free-effect", "cg-loading", "lateral-static-stability", "pitch-dynamic-response", "longitudinal-modes", "dynamic-mode", "stability-trade-study", "mission-loading"];
+
 const stage4Fixture = {
   feature: {
     contractVersion: 4, id: "trim-response", title: "Stage 4 activation fixture", learningMode: "concept", topicId: "stability",
@@ -33,7 +36,7 @@ const stage4Fixture = {
 };
 
 describe("Stage 4 activation boundary", () => {
-  // We filter out your real Stage 4 file so the test can pretend it's missing
+  // We filter out your real Stage 4 file so the test can pretend it's missing temporarily
   const testEntries = featureEntries.filter(({ feature }) => feature.id !== "trim-response");
 
   it("keeps every downstream stage runtime-locked while Stage 4 is absent", () => {
@@ -51,15 +54,7 @@ describe("Stage 4 activation boundary", () => {
     
     const stability = buildCurriculum(entries, registry).find(({ id }) => id === "stability");
     expect(stability.modules.filter(({ feature }) => downstreamIds.includes(feature.id)).every(({ runtimeReady }) => runtimeReady)).toBe(true);
-  });
-});
-
-  it("activates and evaluates every downstream stage when the Stage 4 capability is installed", () => {
-    const entries = [...featureEntries, stage4Fixture];
-    const registry = createCapabilityRegistry(entries);
-    expect(registry.issues).toEqual([]);
-    const stability = buildCurriculum(entries, registry).find(({ id }) => id === "stability");
-    expect(stability.modules.filter(({ feature }) => downstreamIds.includes(feature.id)).every(({ runtimeReady }) => runtimeReady)).toBe(true);
+    
     downstreamIds.forEach((id) => {
       const models = modelsForFeature(id, registry);
       const context = capabilityContext(models, initialAircraft);
@@ -68,6 +63,7 @@ describe("Stage 4 activation boundary", () => {
       expect(analysis.results[0].label).not.toBe("Analysis unavailable");
       expect(analysis.verificationCases.every(({ passed }) => passed)).toBe(true);
     });
+    
     const pitchEntries = modelsForFeature("pitch-dynamic-response", registry);
     const pitchRun = runSimulation({ entries: pitchEntries, aircraft: initialAircraft, scenario: { durationS: 0.4, initialState: { pitchRad: 0, pitchRateRadS: 0 } } });
     expect(pitchRun.status).toBe("complete");
