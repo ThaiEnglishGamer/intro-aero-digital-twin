@@ -11,8 +11,17 @@ import { capabilityContext, runSimulation } from "../../src/core/simulation/runt
 const a = { massKg: 1.35, airframeCgM: .11, payloadKg: .25, initialPayloadPositionM: .1, missionPayloadPositionM: .24, neutralPointM: .16, meanChordM: .32, forwardCgLimitM: .09, aftCgLimitM: .16, minimumStaticMargin: .05 };
 
 describe("mission loading", () => {
-  it("moves CG aft and reduces margin when payload moves aft", () => { const r = evaluateMissionLoading(a); expect(r.cgShiftM).toBeGreaterThan(0); expect(r.missionStaticMargin).toBeLessThan(r.initialStaticMargin); });
-  it("has zero shift when stations coincide and rejects reversed limits", () => { expect(evaluateMissionLoading({ ...a, missionPayloadPositionM: a.initialPayloadPositionM }).cgShiftM).toBe(0); expect(() => evaluateMissionLoading({ ...a, forwardCgLimitM: .2, aftCgLimitM: .1 })).toThrow(); });
+  it("moves CG aft and reduces margin when payload moves aft", () => {
+    const r = evaluateMissionLoading(a);
+    expect(r.cgShiftM).toBeGreaterThan(0);
+    expect(r.missionStaticMargin).toBeLessThan(r.initialStaticMargin);
+  });
+
+  it("has zero shift when stations coincide and rejects reversed limits", () => {
+    expect(evaluateMissionLoading({ ...a, missionPayloadPositionM: a.initialPayloadPositionM }).cgShiftM).toBe(0);
+    expect(() => evaluateMissionLoading({ ...a, forwardCgLimitM: .2, aftCgLimitM: .1 })).toThrow();
+  });
+
   it("states a failed loading requirement in direct grammatical language", () => {
     const analysis = missionLoadingFeature.analyze(
       { ...a, missionPayloadPositionM: 0.5 },
@@ -36,7 +45,6 @@ const stage4Fixture = {
 };
 
 describe("Stage 4 activation boundary", () => {
-  // We filter out your real Stage 4 file so the test can pretend it's missing temporarily
   const testEntries = featureEntries.filter(({ feature }) => feature.id !== "trim-response");
 
   it("keeps every downstream stage runtime-locked while Stage 4 is absent", () => {
